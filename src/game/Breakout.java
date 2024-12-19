@@ -1,16 +1,15 @@
 package game;
 
 import javax.swing.JFrame;
-import java.awt.EventQueue;
 
 public class Breakout extends JFrame {
 
-	public Breakout() {
-		initUI();
+	public Breakout(Board board) {
+		initUI(board);
 	}
 
-	public void initUI() {
-		add(new Board(2));
+	private void initUI(Board board) {
+		add(board);
 		setTitle("Breakout");
 
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -18,13 +17,4 @@ public class Breakout extends JFrame {
 		setResizable(false);
 		pack();
 	}
-
-	public static void main(String[] args) {
-		EventQueue.invokeLater(() -> {
-			var game = new Breakout();
-			game.setVisible(true);
-
-		});
-	}
-
 }

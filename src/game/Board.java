@@ -1,16 +1,7 @@
 package game;
 
-import javax.swing.JPanel;
-import javax.swing.Timer;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.RenderingHints;
-import java.awt.Toolkit;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -19,11 +10,12 @@ import java.awt.event.KeyEvent;
 public class Board extends JPanel {
 
     private Timer timer;
-    private String message = "Game Over";
+    private String message = "Игра окончена";
     private Ball ball;
     private Paddle paddle;
     private Brick[] bricks;
-    private boolean inGame = true;
+    private int inGame = 2;
+    private String playerName = "-";
 
     public Board(int blockPositionType) {
 
@@ -41,15 +33,6 @@ public class Board extends JPanel {
 
     private void gameInit(int blockPositionType) {
 
-        int nOfBricks;
-        switch (blockPositionType){
-            case 1:
-                nOfBricks = Commons.N_OF_BRICKS_NORMAL;
-            case 2:
-                nOfBricks = Commons.N_OF_BRICKS_PYRAMID;
-            case 3:
-                nOfBricks = Commons.N_OF_BRICKS_CIRCLE;
-        }
         bricks = new Brick[Commons.N_OF_BRICKS];
 
         ball = new Ball();
@@ -134,14 +117,12 @@ public class Board extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING,
                 RenderingHints.VALUE_RENDER_QUALITY);
 
-        if (inGame) {
+        if (inGame == 2) {
 
             drawObjects(g2d);
         } else {
-
-            gameFinished(g2d);
+            gameFinished(g2d, inGame);
         }
-
         Toolkit.getDefaultToolkit().sync();
     }
 
@@ -163,17 +144,59 @@ public class Board extends JPanel {
         }
     }
 
-    private void gameFinished(Graphics2D g2d) {
-
+    private void gameFinished(Graphics2D g2d, int inGame) {
         var font = new Font("Verdana", Font.BOLD, 18);
         FontMetrics fontMetrics = this.getFontMetrics(font);
 
         g2d.setColor(Color.BLACK);
         g2d.setFont(font);
-        g2d.drawString(message,
-                (Commons.WIDTH - fontMetrics.stringWidth(message)) / 2,
-                Commons.WIDTH / 2);
+
+        if (inGame == 1) {
+            g2d.drawString(message,
+                    (Commons.WIDTH - fontMetrics.stringWidth(message)) / 2,
+                    Commons.HEIGHT / 2 - 20);
+            g2d.drawString("Игрок: " + playerName,
+                    (Commons.WIDTH - fontMetrics.stringWidth("Игрок: " + playerName)) / 2,
+                    Commons.HEIGHT / 2 + 20);
+
+            Leaderboard leaderboard = new Leaderboard();
+            leaderboard.setScore(playerName);
+        } else {
+            g2d.drawString("Поражение",
+                    (Commons.WIDTH - fontMetrics.stringWidth("Поражение")) / 2,
+                    Commons.HEIGHT / 2);
+        }
+
+//        // Добавление кнопки для возврата в главное меню
+//        JButton mainMenuButton = new JButton("Главное меню");
+//        mainMenuButton.setBounds(
+//                (Commons.WIDTH - 150) / 2, // Центрирование по ширине
+//                Commons.HEIGHT / 2 + 50,  // Расположение ниже текста
+//                150, 40
+//        );
+//
+//        mainMenuButton.setBackground(Color.LIGHT_GRAY);
+//        mainMenuButton.setForeground(Color.BLACK);
+//        mainMenuButton.setFont(new Font("Arial", Font.BOLD, 14));
+//
+//        // Действие для кнопки "Главное меню"
+//        mainMenuButton.addActionListener(e -> returnToMainMenu());
+//
+//        // Добавляем кнопку на панель
+//        this.setLayout(null);
+//        this.add(mainMenuButton);
+//        this.repaint();
     }
+
+//    // Метод для возврата в главное меню
+//    private void returnToMainMenu() {
+//        EventQueue.invokeLater(() -> {
+//            var launcher = new GameLauncher();
+//            launcher.setVisible(true);
+//        });
+//        SwingUtilities.getWindowAncestor(this).dispose(); // Закрываем текущее окно
+//    }
+
 
     private class TAdapter extends KeyAdapter {
 
@@ -207,17 +230,28 @@ public class Board extends JPanel {
         repaint();
     }
 
-    private void stopGame() {
-
-        inGame = false;
+    private void stopGame(boolean isWin) {
+        if (isWin) {
+            if (playerName.equals("-")) {
+                String inputName = JOptionPane.showInputDialog(this, "Введите ваш псевдоним:", "Имя игрока", JOptionPane.PLAIN_MESSAGE);
+                if (inputName != null && !inputName.trim().isEmpty()) {
+                    playerName = inputName.trim();
+                }
+            }
+            inGame = 1;
+        }
+        else{
+            inGame = 0;
+        }
         timer.stop();
+
     }
 
     private void checkCollision() {
 
         if (ball.getRect().getMaxY() > Commons.BOTTOM_EDGE) {
 
-            stopGame();
+            stopGame(false);
         }
 
         for (int i = 0, j = 0; i < Commons.N_OF_BRICKS; i++) {
@@ -227,10 +261,10 @@ public class Board extends JPanel {
                 j++;
             }
 
-            if (j == Commons.N_OF_BRICKS) {
+            if (j == Commons.N_OF_BRICKS || true) {
 
-                message = "congratulation!";
-                stopGame();
+                message = "Победа!";
+                stopGame(true);
             }
         }
 
